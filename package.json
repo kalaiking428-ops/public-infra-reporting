@@ -4,11 +4,12 @@
   "description": "Public Infrastructure Issue Reporting & Management System",
   "scripts": {
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
-    "server": "npm run dev --prefix server",
-    "client": "npm run dev --prefix client",
-    "build": "npm run build --prefix client",
-    "start": "npm run start --prefix server"
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install",
+    "start": "node server/server.js",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
