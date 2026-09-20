@@ -1,16 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
 import { ReportIssuePage } from './pages/ReportIssuePage';
 import { TrackIssuePage } from './pages/TrackIssuePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { Shield, PhoneCall, Mail, ExternalLink, Heart } from 'lucide-react';
+import { LoginPage } from './pages/LoginPage';
+import { MyReportsPage } from './pages/MyReportsPage';
+import { Shield, PhoneCall, Mail, ExternalLink, Heart, Lock } from 'lucide-react';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'report', 'track', 'admin'
+  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'report', 'track', 'admin', 'login', 'my_reports'
   const [selectedTicketId, setSelectedTicketId] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Restore user session from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('civicalert_user');
+      if (saved) {
+        setCurrentUser(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to parse saved user:', e);
+    }
+  }, []);
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    localStorage.setItem('civicalert_user', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('civicalert_user');
+    setCurrentPage('home');
+  };
 
   const navigateTo = (page, ticketId = '') => {
+    if (page === 'my_reports' && !currentUser) {
+      setCurrentPage('login');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setCurrentPage(page);
     if (ticketId) {
       setSelectedTicketId(ticketId);
@@ -22,10 +54,16 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
       
       {/* Top Navigation */}
-      <Navbar currentPage={currentPage} onNavigate={(p) => navigateTo(p)} />
+      <Navbar 
+        currentPage={currentPage} 
+        onNavigate={(p) => navigateTo(p)} 
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
 
       {/* Main Page Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        
         {currentPage === 'home' && (
           <HomePage 
             onNavigate={(p) => navigateTo(p)}
@@ -37,6 +75,7 @@ export default function App() {
           <ReportIssuePage 
             onNavigate={(p) => navigateTo(p)}
             onSelectTicket={(id) => navigateTo('track', id)}
+            currentUser={currentUser}
           />
         )}
 
@@ -48,10 +87,55 @@ export default function App() {
         )}
 
         {currentPage === 'admin' && (
-          <AdminDashboardPage 
+          // If accessing Admin without admin/officer login, offer prompt or show with alert
+          !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'officer') ? (
+            <div className="max-w-md mx-auto py-12 text-center space-y-4">
+              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">
+                Municipal Authority Access Required
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                The operations console is reserved for verified municipal department officers and supervisors. Please sign in with your official account.
+              </p>
+              <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+                <button
+                  onClick={() => setCurrentPage('login')}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition"
+                >
+                  Sign In as Officer / Admin
+                </button>
+                <button
+                  onClick={() => setCurrentPage('home')}
+                  className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+                >
+                  Back to Community Feed
+                </button>
+              </div>
+            </div>
+          ) : (
+            <AdminDashboardPage 
+              onSelectTicket={(id) => navigateTo('track', id)}
+            />
+          )
+        )}
+
+        {currentPage === 'login' && (
+          <LoginPage 
+            onLoginSuccess={handleLoginSuccess}
+            onNavigate={(p) => navigateTo(p)}
+          />
+        )}
+
+        {currentPage === 'my_reports' && (
+          <MyReportsPage
+            user={currentUser}
+            onNavigate={(p) => navigateTo(p)}
             onSelectTicket={(id) => navigateTo('track', id)}
           />
         )}
+
       </main>
 
       {/* Civic Footer */}
@@ -92,7 +176,7 @@ export default function App() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => navigateTo('admin')} className="hover:text-blue-600 transition font-medium text-indigo-600">
+                  <button onClick={() => navigateTo(currentUser ? 'admin' : 'login')} className="hover:text-blue-600 transition font-medium text-indigo-600">
                     Municipal Officer Portal
                   </button>
                 </li>
@@ -126,7 +210,7 @@ export default function App() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Civic Transparency</h4>
               <p className="text-xs text-slate-500 leading-relaxed">
-                All complaints logged in this portal are public public-records. Work orders, assigned field personnel, and photographic evidence before and after resolution are accessible to all residents.
+                All complaints logged in this portal are public records. Work orders, assigned field personnel, and photographic evidence before and after resolution are accessible to all residents.
               </p>
             </div>
 

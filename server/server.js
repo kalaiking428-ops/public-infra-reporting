@@ -47,6 +47,122 @@ function formatIssue(row) {
 }
 
 // -------------------------------------------------------------
+// AUTHENTICATION ROUTES
+// -------------------------------------------------------------
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { name, email, phone, password, role = 'citizen' } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(cleanEmail);
+    if (existing) {
+      return res.status(400).json({ error: 'An account with this email already exists. Please log in.' });
+    }
+
+    const id = 'USR-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO users (id, name, email, phone, password, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name.trim(), cleanEmail, phone ? phone.trim() : null, password, role, now);
+
+    const user = {
+      id,
+      name: name.trim(),
+      email: cleanEmail,
+      phone: phone ? phone.trim() : null,
+      role
+    };
+
+    res.status(201).json({
+      message: 'Account created successfully!',
+      user,
+      token: 'session-' + id
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Failed to create account' });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?').get(cleanEmail);
+
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid email or password. Please check your credentials.' });
+    }
+
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      department_id: user.department_id
+    };
+
+    res.json({
+      message: 'Login successful!',
+      user: safeUser,
+      token: 'session-' + user.id
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+    const user = db.prepare('SELECT id, name, email, phone, role, department_id FROM users WHERE LOWER(email) = ?').get(email.trim().toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+app.get('/api/issues/my', (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    const issues = db.prepare(`
+      SELECT i.*, c.name as category_name, c.icon as category_icon, d.name as department_name
+      FROM issues i
+      LEFT JOIN categories c ON i.category_id = c.id
+      LEFT JOIN departments d ON i.department_id = d.id
+      WHERE LOWER(i.reporter_email) = ?
+      ORDER BY i.created_at DESC
+    `).all(email.trim().toLowerCase()).map(formatIssue);
+
+    res.json(issues);
+  } catch (err) {
+    console.error('Error fetching user issues:', err);
+    res.status(500).json({ error: 'Failed to fetch user issues' });
+  }
+});
+
+// -------------------------------------------------------------
 // 1. GET /api/categories - list all categories
 // -------------------------------------------------------------
 app.get('/api/categories', (req, res) => {

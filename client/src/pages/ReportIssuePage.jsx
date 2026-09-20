@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 import { IssueMap } from '../components/IssueMap';
 import { api } from '../services/api';
 
-export function ReportIssuePage({ onNavigate, onSelectTicket }) {
+export function ReportIssuePage({ onNavigate, onSelectTicket, currentUser }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submittedIssue, setSubmittedIssue] = useState(null);
@@ -21,13 +21,21 @@ export function ReportIssuePage({ onNavigate, onSelectTicket }) {
   const [coords, setCoords] = useState({ lat: 13.0827, lng: 80.2707 }); // Default city coordinates
   const [address, setAddress] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [reporterName, setReporterName] = useState('');
-  const [reporterEmail, setReporterEmail] = useState('');
-  const [reporterPhone, setReporterPhone] = useState('');
+  const [reporterName, setReporterName] = useState(currentUser?.name || '');
+  const [reporterEmail, setReporterEmail] = useState(currentUser?.email || '');
+  const [reporterPhone, setReporterPhone] = useState(currentUser?.phone || '');
 
   // Image upload
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.name) setReporterName(currentUser.name);
+      if (currentUser.email) setReporterEmail(currentUser.email);
+      if (currentUser.phone) setReporterPhone(currentUser.phone);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     api.getCategories().then((data) => {

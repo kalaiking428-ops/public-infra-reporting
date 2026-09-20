@@ -65,12 +65,34 @@ function initDatabase() {
       created_at TEXT NOT NULL,
       FOREIGN KEY (issue_id) REFERENCES issues(id)
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'citizen',
+      department_id TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 
   seedData();
 }
 
 function seedData() {
+  // Check users
+  const existingUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
+  if (existingUsers.count === 0) {
+    const insertUser = db.prepare('INSERT INTO users (id, name, email, phone, password, role, department_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    const now = new Date().toISOString();
+    insertUser.run('USR-ADMIN-1', 'Municipal Control Officer', 'admin@citygov.org', '1800-201-ADMIN', 'admin123', 'admin', 'roads', now);
+    insertUser.run('USR-OFFICER-1', 'Inspector M. Rajesh', 'officer@citygov.org', '9840112233', 'officer123', 'officer', 'roads', now);
+    insertUser.run('USR-CITIZEN-1', 'Priya Sundaram', 'priya.s@example.com', '9840123456', 'citizen123', 'citizen', null, now);
+    insertUser.run('USR-CITIZEN-2', 'Karthik Raman', 'karthik.r@example.com', '9840987654', 'citizen123', 'citizen', null, now);
+  }
+
   // Check if departments exist
   const existingDept = db.prepare('SELECT COUNT(*) as count FROM departments').get();
   if (existingDept.count === 0) {

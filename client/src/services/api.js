@@ -120,5 +120,43 @@ export const api = {
       // Fallback
     }
     return `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  },
+
+  // Auth: Login
+  async login(email, password) {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    return data;
+  },
+
+  // Auth: Register
+  async register(userData) {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    return data;
+  },
+
+  // Auth: Get current user
+  async getMe(email) {
+    const res = await fetch(`${API_BASE}/auth/me?email=${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error('Failed to fetch user profile');
+    return res.json();
+  },
+
+  // Get issues reported by specific user
+  async getMyIssues(email) {
+    const res = await fetch(`${API_BASE}/issues/my?email=${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error('Failed to fetch user issues');
+    return res.json();
   }
 };
