@@ -108,7 +108,11 @@ public-infra-reporting/
 
 | Endpoint | Method | Description |
 |---|---|---|
+| `/api/auth/register` | `POST` | Register a new citizen account |
+| `/api/auth/login` | `POST` | Authenticate citizen or municipal officer |
+| `/api/auth/me` | `GET` | Get authenticated user profile |
 | `/api/issues` | `GET` | List issues (supports `status`, `category_id`, `department_id`, `priority`, `search` filters) |
+| `/api/issues/my` | `GET` | List complaints submitted by authenticated citizen |
 | `/api/issues/:id` | `GET` | Get single issue with full timeline events |
 | `/api/issues` | `POST` | Submit a new issue with multipart image upload |
 | `/api/issues/:id/status` | `PATCH` | Authority triage, update status, assign department & field officer, attach resolution photo |
@@ -117,3 +121,33 @@ public-infra-reporting/
 | `/api/categories` | `GET` | List all issue categories |
 | `/api/departments` | `GET` | List departments with active & resolved counts |
 | `/api/stats` | `GET` | System-wide statistics and workload breakdown |
+
+---
+
+## 🏛️ System Architecture & Workflow
+
+```
+[Citizen Client]
+     │
+     ├── 1. Report Issue (Photo, GPS Coordinates, Category)
+     ├── 2. Track Real-time Progress (Ticket ID)
+     └── 3. Submit Resolution Feedback
+            │
+            ▼
+   [Express.js REST API] <─────> [SQLite Database (node:sqlite)]
+            ▲
+            │
+     ├── 4. Triage & Verify Complaint
+     ├── 5. Assign Work Order to Department
+     └── 6. Attach Proof of Work & Mark Resolved
+            │
+[Municipal Authority Console]
+```
+
+### Database Entity Relationship (ER) Summary
+- **users:** `id`, `name`, `email`, `phone`, `password`, `role` (citizen/officer/admin), `department_id`
+- **departments:** `id`, `name`, `email`, `phone`, `head_officer`
+- **categories:** `id`, `name`, `default_dept_id`, `icon`
+- **issues:** `id`, `title`, `description`, `category_id`, `priority`, `status`, `latitude`, `longitude`, `address`, `landmark`, `image_url`, `resolution_image_url`, `department_id`, `assigned_officer`, `upvotes`, `citizen_rating`, `citizen_feedback`
+- **timeline:** `id`, `issue_id`, `status`, `title`, `description`, `actor`, `created_at`
+
