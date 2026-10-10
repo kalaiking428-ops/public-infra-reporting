@@ -11,19 +11,21 @@ try {
 // Create reusable transporter if SMTP credentials are provided in env
 function getTransporter() {
   if (!nodemailer) return null;
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (user && pass) {
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      service: 'gmail',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: user.trim(),
+        pass: pass.trim().replace(/\s+/g, '') // strip spaces if copied with spaces
       }
     });
   }
   return null;
 }
+
 
 /**
  * Send automated SMS and Email on Grievance Registration
