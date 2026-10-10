@@ -40,10 +40,13 @@ export function IssueCard({ issue, onTrack, onUpvote }) {
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Category & Department */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2 flex-wrap">
             <span className="inline-flex items-center gap-1 font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
               <Tag className="w-3 h-3" />
               {issue.category_name || issue.category_id}
+            </span>
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+              {issue.category_id === 'garbage' ? '12h SLA' : issue.category_id === 'streetlights' ? '24h SLA' : issue.category_id === 'water_drainage' ? '24h SLA' : '48h SLA'}
             </span>
             <span>•</span>
             <span className="truncate">{issue.department_name || 'Pending assignment'}</span>
