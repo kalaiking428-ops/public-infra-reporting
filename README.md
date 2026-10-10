@@ -1,5 +1,10 @@
 # 🏙️ CivicAlert - Public Infrastructure Issue Reporting & Management System
 
+[![Status](https://img.shields.io/badge/status-active_production-emerald.svg)](https://public-infra-reporting.onrender.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node: >=22](https://img.shields.io/badge/node-%3E%3D22.0.0-green.svg)](https://nodejs.org)
+[![Tests: Passing](https://img.shields.io/badge/tests-7%2F7%20passing-brightgreen.svg)](#)
+
 A digital platform empowering citizens to report public infrastructure issues (such as potholes, broken streetlights, overflowing garbage, blocked drainage, and damaged amenities) with exact GPS coordinates and photographic evidence, while providing municipal authorities with a centralized dashboard to prioritize, dispatch, track, and verify resolutions.
 
 ---
