@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   AlertCircle, CheckCircle2, Clock, MapPin, Search, Filter, 
-  ShieldAlert, Sparkles, Layers, List, Map as MapIcon, ArrowRight 
+  ShieldAlert, Sparkles, Layers, List, Map as MapIcon, ArrowRight, Command 
 } from 'lucide-react';
 import { IssueCard } from '../components/IssueCard';
 import { IssueMap } from '../components/IssueMap';
 import { api } from '../services/api';
 
 export function HomePage({ onNavigate, onSelectTicket }) {
+  const searchInputRef = useRef(null);
   const [issues, setIssues] = useState([]);
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -46,6 +47,19 @@ export function HomePage({ onNavigate, onSelectTicket }) {
   useEffect(() => {
     loadData();
   }, [statusFilter, categoryFilter, priorityFilter]);
+
+  // Keyboard shortcut listener to focus search (Ctrl+K or /)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') ||
+          (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -204,12 +218,17 @@ export function HomePage({ onNavigate, onSelectTicket }) {
               <form onSubmit={handleSearchSubmit} className="relative w-full sm:max-w-md">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Search by ticket ID (e.g. INFRA-1001), keyword, or location..."
+                  placeholder="Search tickets, keywords, or location (Press '/' or Ctrl+K)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-20 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+                  aria-label="Search complaints"
+                  className="w-full pl-10 pr-24 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
                 />
+                <div className="absolute right-16 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-0.5 pointer-events-none">
+                  <kbd className="text-[10px] bg-slate-200/80 text-slate-500 font-mono px-1.5 py-0.5 rounded border border-slate-300">Ctrl K</kbd>
+                </div>
                 <button
                   type="submit"
                   className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
