@@ -19,6 +19,7 @@ export function HomePage({ onNavigate, onSelectTicket }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = async () => {
@@ -74,6 +75,23 @@ export function HomePage({ onNavigate, onSelectTicket }) {
       console.error('Upvote failed:', err);
     }
   };
+
+  const displayedIssues = issues.filter((issue) => {
+    if (dateFilter === 'today') {
+      const issueDate = new Date(issue.created_at).toDateString();
+      const today = new Date().toDateString();
+      return issueDate === today;
+    }
+    if (dateFilter === 'week') {
+      const diffDays = (new Date() - new Date(issue.created_at)) / (1000 * 3600 * 24);
+      return diffDays <= 7;
+    }
+    if (dateFilter === 'month') {
+      const diffDays = (new Date() - new Date(issue.created_at)) / (1000 * 3600 * 24);
+      return diffDays <= 30;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-8 pb-16">
@@ -294,12 +312,25 @@ export function HomePage({ onNavigate, onSelectTicket }) {
                 <option value="Low">Low</option>
               </select>
 
-              {(statusFilter !== 'all' || categoryFilter !== 'all' || priorityFilter !== 'all' || searchQuery) && (
+              {/* Date Filter Select */}
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-medium focus:outline-none focus:border-blue-500"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Reported Today</option>
+                <option value="week">Past 7 Days</option>
+                <option value="month">Past 30 Days</option>
+              </select>
+
+              {(statusFilter !== 'all' || categoryFilter !== 'all' || priorityFilter !== 'all' || dateFilter !== 'all' || searchQuery) && (
                 <button
                   onClick={() => {
                     setStatusFilter('all');
                     setCategoryFilter('all');
                     setPriorityFilter('all');
+                    setDateFilter('all');
                     setSearchQuery('');
                   }}
                   className="text-rose-600 hover:text-rose-700 font-medium underline ml-auto"
@@ -317,7 +348,7 @@ export function HomePage({ onNavigate, onSelectTicket }) {
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               <p className="text-sm text-slate-500">Loading civic issues...</p>
             </div>
-          ) : issues.length === 0 ? (
+          ) : displayedIssues.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-lg mx-auto">
               <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <h3 className="text-base font-bold text-slate-800">No issues found</h3>
@@ -327,6 +358,7 @@ export function HomePage({ onNavigate, onSelectTicket }) {
                   setStatusFilter('all');
                   setCategoryFilter('all');
                   setPriorityFilter('all');
+                  setDateFilter('all');
                   setSearchQuery('');
                 }}
                 className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition"
@@ -336,7 +368,7 @@ export function HomePage({ onNavigate, onSelectTicket }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {issues.map((issue) => (
+              {displayedIssues.map((issue) => (
                 <IssueCard
                   key={issue.id}
                   issue={issue}
