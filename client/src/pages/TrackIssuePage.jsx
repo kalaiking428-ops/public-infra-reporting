@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, AlertCircle, ArrowLeft, MapPin, Building, User, Calendar, 
-  ThumbsUp, Star, CheckCircle, RefreshCw, Send 
+  ThumbsUp, Star, CheckCircle, RefreshCw, Send, Printer, Download 
 } from 'lucide-react';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
 import { Timeline } from '../components/Timeline';
@@ -166,13 +166,24 @@ export function TrackIssuePage({ ticketId = '', onNavigate }) {
                   <PriorityBadge priority={issue.priority} />
                 </div>
 
-                <button
-                  onClick={handleUpvote}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-600 text-xs font-semibold shadow-xs transition"
-                >
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                  <span>{issue.upvotes} Citizens Impacted</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-semibold shadow-xs transition print:hidden"
+                    title="Print grievance receipt"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Print Receipt</span>
+                  </button>
+
+                  <button
+                    onClick={handleUpvote}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-600 text-xs font-semibold shadow-xs transition"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                    <span>{issue.upvotes} Citizens Impacted</span>
+                  </button>
+                </div>
               </div>
 
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
