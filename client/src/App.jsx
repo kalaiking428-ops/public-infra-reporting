@@ -6,12 +6,33 @@ import { TrackIssuePage } from './pages/TrackIssuePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { MyReportsPage } from './pages/MyReportsPage';
+import { NotificationModal } from './components/NotificationModal';
+import { api } from './services/api';
 import { Shield, PhoneCall, Mail, ExternalLink, Heart, Lock } from 'lucide-react';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home'); // 'home', 'report', 'track', 'admin', 'login', 'my_reports'
   const [selectedTicketId, setSelectedTicketId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  // Fetch notifications helper
+  const fetchNotifications = async () => {
+    try {
+      const data = await api.getNotifications({ limit: 50 });
+      setNotifications(data || []);
+    } catch (err) {
+      console.warn('Failed to fetch notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   // Restore user session from localStorage
   useEffect(() => {
@@ -59,7 +80,13 @@ export default function App() {
         onNavigate={(p) => navigateTo(p)} 
         currentUser={currentUser}
         onLogout={handleLogout}
+        onOpenNotifications={() => {
+          fetchNotifications();
+          setIsNotificationOpen(true);
+        }}
+        notificationCount={notifications.length}
       />
+
 
       {/* Main Page Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
@@ -225,6 +252,16 @@ export default function App() {
         </div>
       </footer>
 
+      {/* SMS & Email Notification Center Drawer */}
+      <NotificationModal 
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        notifications={notifications}
+        onRefresh={fetchNotifications}
+        onSelectIssue={(id) => navigateTo('track', id)}
+      />
+
     </div>
   );
 }
+

@@ -4,6 +4,11 @@ const path = require('node:path');
 const fs = require('node:fs');
 const multer = require('multer');
 const { db, generateIssueId } = require('./db');
+const { 
+  sendRegistrationNotifications, 
+  sendResolutionNotifications, 
+  getNotifications 
+} = require('./notifications');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -371,6 +376,11 @@ app.post('/api/issues', upload.single('image'), (req, res) => {
       WHERE i.id = ?
     `).get(id);
 
+    // Trigger automated SMS & Email registration alerts
+    sendRegistrationNotifications({ issue: formatIssue(createdIssue) }).catch(err => {
+      console.error('Registration notification dispatch error:', err);
+    });
+
     res.status(201).json(formatIssue(createdIssue));
   } catch (err) {
     console.error('Error creating issue:', err);
@@ -447,6 +457,18 @@ app.patch('/api/issues/:id/status', upload.single('resolution_image'), (req, res
       WHERE i.id = ?
     `).get(existing.id);
 
+    // Trigger automated SMS & Email resolution alerts if marked Resolved
+    if (status === 'Resolved' && existing.status !== 'Resolved') {
+      sendResolutionNotifications({
+        issue: formatIssue(updated),
+        notes: eventDescription,
+        officerName: assigned_officer || actor || 'Municipal Inspector',
+        resolutionImageUrl
+      }).catch(err => {
+        console.error('Resolution notification dispatch error:', err);
+      });
+    }
+
     const timeline = db.prepare('SELECT * FROM timeline WHERE issue_id = ? ORDER BY created_at ASC').all(existing.id);
 
     res.json({
@@ -456,6 +478,19 @@ app.patch('/api/issues/:id/status', upload.single('resolution_image'), (req, res
   } catch (err) {
     console.error('Error updating status:', err);
     res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+// -------------------------------------------------------------
+// NOTIFICATIONS API
+// -------------------------------------------------------------
+app.get('/api/notifications', (req, res) => {
+  try {
+    const list = getNotifications(req.query);
+    res.json(list);
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 });
 

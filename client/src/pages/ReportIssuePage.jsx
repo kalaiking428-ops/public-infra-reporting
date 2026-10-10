@@ -178,6 +178,20 @@ export function ReportIssuePage({ onNavigate, onSelectTicket, currentUser }) {
             <p><strong>Location:</strong> {submittedIssue.address}</p>
           </div>
 
+          {/* SMS & Email Notification Sent Confirmation */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center justify-between text-left">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div>
+                <p className="font-bold text-emerald-900">SMS & Email Alerts Sent</p>
+                <p className="text-[11px] text-emerald-700">
+                  Confirmation dispatch has been sent to your registered mobile and email. Check the top 🔔 bell icon to view alert details.
+                </p>
+              </div>
+            </div>
+          </div>
+
+
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <button
               onClick={() => onSelectTicket(submittedIssue.id)}

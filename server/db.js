@@ -76,12 +76,44 @@ function initDatabase() {
       department_id TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      issue_id TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      event TEXT NOT NULL,
+      recipient TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'DELIVERED',
+      sent_at TEXT NOT NULL,
+      FOREIGN KEY (issue_id) REFERENCES issues(id)
+    );
   `);
 
   seedData();
 }
 
 function seedData() {
+  // Check notifications
+  const existingNotifs = db.prepare('SELECT COUNT(*) as count FROM notifications').get();
+  if (existingNotifs.count === 0) {
+    const insertNotif = db.prepare(`
+      INSERT INTO notifications (issue_id, channel, event, recipient, title, message, status, sent_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const date1 = new Date(Date.now() - 72 * 3600 * 1000).toISOString();
+    const date2 = new Date(Date.now() - 8 * 3600 * 1000).toISOString();
+    const date3 = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+
+    insertNotif.run('INFRA-1003', 'SMS', 'REGISTERED', '9840555666', 'CivicAlert: Grievance Lodged', 'Dear Deepak Varma, your complaint #INFRA-1003 (Overflowing garbage container) has been registered with Sanitation & Waste. Track at: https://public-infra-reporting.onrender.com', 'DELIVERED', date1);
+    insertNotif.run('INFRA-1003', 'EMAIL', 'REGISTERED', 'deepak.v@example.com', 'Grievance Registered: INFRA-1003', 'Your public infrastructure report for Overflowing garbage container at Market Lane, Egmore has been dispatched to Sanitation & Waste Management.', 'DELIVERED', date1);
+    insertNotif.run('INFRA-1003', 'SMS', 'RESOLVED', '9840555666', 'CivicAlert: Issue Resolved!', 'Good news! Complaint #INFRA-1003 has been RESOLVED by Officer Sarah Chen. Work proof attached. Please rate our service: https://public-infra-reporting.onrender.com', 'DELIVERED', date2);
+    insertNotif.run('INFRA-1003', 'EMAIL', 'RESOLVED', 'deepak.v@example.com', 'Issue Resolved: INFRA-1003 [Proof Attached]', 'The waste accumulation at Market Lane, Egmore has been cleared and sanitized. You can view before/after evidence photos and submit feedback.', 'DELIVERED', date2);
+    insertNotif.run('INFRA-1001', 'SMS', 'REGISTERED', '9840123456', 'CivicAlert: Grievance Lodged', 'Dear Priya Sundaram, your complaint #INFRA-1001 (Deep pothole) has been registered with Roads & Infrastructure. Track status online.', 'DELIVERED', date3);
+    insertNotif.run('INFRA-1001', 'EMAIL', 'REGISTERED', 'priya.s@example.com', 'Grievance Registered: INFRA-1001', 'Your report for Deep pothole near school zone has been received and prioritized as High Urgency by Roads & Infrastructure.', 'DELIVERED', date3);
+  }
+
   // Check users
   const existingUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (existingUsers.count === 0) {

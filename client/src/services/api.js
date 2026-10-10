@@ -158,5 +158,20 @@ export const api = {
     const res = await fetch(`${API_BASE}/issues/my?email=${encodeURIComponent(email)}`);
     if (!res.ok) throw new Error('Failed to fetch user issues');
     return res.json();
+  },
+
+  // Get notifications (SMS & Email alerts)
+  async getNotifications(params = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.issue_id) queryParams.append('issue_id', params.issue_id);
+    if (params.recipient) queryParams.append('recipient', params.recipient);
+    if (params.channel) queryParams.append('channel', params.channel);
+    if (params.limit) queryParams.append('limit', params.limit);
+
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    const res = await fetch(`${API_BASE}/notifications${query}`);
+    if (!res.ok) throw new Error('Failed to fetch notifications');
+    return res.json();
   }
 };
+

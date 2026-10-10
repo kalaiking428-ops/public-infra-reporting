@@ -1,10 +1,11 @@
 import React from 'react';
 import { 
   Shield, PlusCircle, Search, LayoutDashboard, Home, 
-  LogIn, LogOut, User, FileText, CheckCircle2 
+  LogIn, LogOut, User, FileText, CheckCircle2, Bell
 } from 'lucide-react';
 
-export function Navbar({ currentPage, onNavigate, currentUser, onLogout }) {
+export function Navbar({ currentPage, onNavigate, currentUser, onLogout, onOpenNotifications, notificationCount = 0 }) {
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,6 +86,20 @@ export function Navbar({ currentPage, onNavigate, currentUser, onLogout }) {
           {/* Right Action CTAs & Auth Controls */}
           <div className="flex items-center gap-3">
             
+            {/* Notification Bell Button */}
+            <button
+              onClick={onOpenNotifications}
+              title="View SMS & Email Alerts"
+              className="relative p-2 rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition border border-slate-200"
+            >
+              <Bell className="w-4 h-4" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
+            </button>
+
             {/* Report Button */}
             <button
               onClick={() => onNavigate('report')}
@@ -93,6 +108,7 @@ export function Navbar({ currentPage, onNavigate, currentUser, onLogout }) {
               <PlusCircle className="w-4 h-4" />
               <span>Report Issue</span>
             </button>
+
 
             {/* User Profile / Auth State */}
             {currentUser ? (

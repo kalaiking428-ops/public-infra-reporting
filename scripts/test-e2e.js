@@ -47,7 +47,12 @@ function runTests() {
   const newId = generateIssueId();
   assert('Ticket ID Generator Format (INFRA-XXXX)', /^INFRA-\d{4}$/.test(newId));
 
+  // Test 8: Verify Notifications Table & Dual-channel Alerts
+  const notifications = db.prepare('SELECT COUNT(*) as count FROM notifications').get();
+  assert('Notifications Table Initialized & Seeded', notifications.count >= 4);
+
   console.log(`\n🎉 Test Results: ${passed}/${total} passed (${Math.round((passed/total)*100)}%)\n`);
+
 
   if (passed !== total) {
     process.exit(1);
